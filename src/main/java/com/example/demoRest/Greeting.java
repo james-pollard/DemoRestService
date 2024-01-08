@@ -18,7 +18,7 @@ public class Greeting {
 	}
 
 	public String getContent() {
-		return content;
+		return Long.toString(id) + " " + content;
 	}
 	
 }

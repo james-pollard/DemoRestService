@@ -1,0 +1,17 @@
+spring:
+  spring:
+    data:
+      mongodb:
+        uri: mongodb://localhost:27017/mydatabase
+        #For M Series Macs (colima), use:
+        #uri: mongodb://mongodb:27017/mydatabase
+  kafka:
+    bootstrap-servers: localhost:9093
+    consumer:
+      group-id: my-group
+    streams:
+      application-id: my-streams-app
+
+kafka:
+  topics:
+    - test-topic
