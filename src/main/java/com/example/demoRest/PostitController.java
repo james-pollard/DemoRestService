@@ -38,12 +38,12 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
 		System.out.println(">>>>>>>>> received post" + " at: " + timeStamp);
 
         // Access the data from jsonData and perform any necessary processing
-        String subject = jsonData.getSubject();
+       // String subject = jsonData.getSubject();
         String body = jsonData.getBody();
-        System.out.println("subject: "+subject);
+       // System.out.println("subject: "+subject);
         System.out.println("body: "+ body);
         //logic to transmit to kafka goes here...
-        sendMessage(body,"test.topic");
+        sendMessage(body,"test-topic");
         return ResponseEntity.ok("Json data processed successfully");
     } catch (Exception e) {
         // Handle exceptions
