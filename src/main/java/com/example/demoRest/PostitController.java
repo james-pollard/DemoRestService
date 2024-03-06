@@ -15,14 +15,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-
+import redis.clients.jedis.*;
 @RestController
 public class PostitController {
-
+private long keycounter = 0;
 private  KafkaTemplate<String, String> kafkaTemplate;
-
+private JedisPool jedisPool;
     @Autowired
     public PostitController(KafkaTemplate<String, String> kafkaTemplate) {
+        if (jedisPool == null){
+            JedisPoolConfig jpc = new JedisPoolConfig();
+            jedisPool = new JedisPool(jpc,"localhost",6379);
+        }
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -38,10 +42,31 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
 		System.out.println(">>>>>>>>> received post" + " at: " + timeStamp);
 
         // Access the data from jsonData and perform any necessary processing
-       // String subject = jsonData.getSubject();
         String body = jsonData.getBody();
        // System.out.println("subject: "+subject);
         System.out.println("body: "+ body);
+        if(this.jedisPool != null) {
+            try  {
+
+                //let's see if we can cache the message:
+                Jedis jedis = jedisPool.getResource();
+                //list prior entries
+                if (keycounter > 0){
+                    System.out.println("Previous cached items:");
+                    for (Integer i = 0; i <  keycounter ; i++){
+                        String rkey = "key" + Integer.toString(i);
+                        String val = jedis.get(rkey);
+                        System.out.println(rkey + " " + val);
+                    }
+                }
+                String cachekey = "key" + Long.toString(keycounter);
+                keycounter++;
+                jedis.set(cachekey, body);
+                System.out.println("cache succeeded");
+            } catch (Exception ex) {
+                System.out.println("cache attempt failed");
+            }
+        }
         //logic to transmit to kafka goes here...
         sendMessage(body,"test-topic");
         return ResponseEntity.ok("Json data processed successfully");
