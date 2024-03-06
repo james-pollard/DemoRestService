@@ -63,6 +63,7 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
                 String cachekey = "key" + Long.toString(keycounter);
                 keycounter++;
                 jedis.set(cachekey, eventobject);
+                jedis.expire(cachekey,150);
                 System.out.println("cache succeeded");
             } catch (Exception ex) {
                 System.out.println("cache attempt failed");
