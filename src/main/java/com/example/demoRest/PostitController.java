@@ -45,6 +45,7 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
         String body = jsonData.getBody();
        // System.out.println("subject: "+subject);
         System.out.println("body: "+ body);
+        String eventobject = body + ":" + timeStamp;
         if(this.jedisPool != null) {
             try  {
 
@@ -61,14 +62,14 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
                 }
                 String cachekey = "key" + Long.toString(keycounter);
                 keycounter++;
-                jedis.set(cachekey, body);
+                jedis.set(cachekey, eventobject);
                 System.out.println("cache succeeded");
             } catch (Exception ex) {
                 System.out.println("cache attempt failed");
             }
         }
         //logic to transmit to kafka goes here...
-        sendMessage(body,"test-topic");
+        sendMessage(eventobject,"test-topic");
         return ResponseEntity.ok("Json data processed successfully");
     } catch (Exception e) {
         // Handle exceptions
