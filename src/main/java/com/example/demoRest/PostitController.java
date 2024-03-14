@@ -1,10 +1,9 @@
 package com.example.demoRest;
-
-
-
+import com.fasterxml.jackson.core.json.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,6 +18,8 @@ import redis.clients.jedis.*;
 @RestController
 public class PostitController {
 private long keycounter = 0;
+
+private String jsonString = "";
 private  KafkaTemplate<String, String> kafkaTemplate;
 private JedisPool jedisPool;
     @Autowired
@@ -43,12 +44,14 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
 
         // Access the data from jsonData and perform any necessary processing
         String body = jsonData.getBody();
+        CachedModelObject cmo = new CachedModelObject();
+        cmo.setMessage(body);
+
        // System.out.println("subject: "+subject);
         System.out.println("body: "+ body);
         String eventobject = body + ":" + timeStamp;
         if(this.jedisPool != null) {
             try  {
-
                 //let's see if we can cache the message:
                 Jedis jedis = jedisPool.getResource();
                 //list prior entries
@@ -61,8 +64,13 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
                     }
                 }
                 String cachekey = "key" + Long.toString(keycounter);
+                cmo.setObjectNumber(keycounter);
+                cmo.setKey(cachekey);
+                cmo.setMessage(body);
                 keycounter++;
-                jedis.set(cachekey, eventobject);
+                ObjectMapper om = new ObjectMapper();
+                jsonString = om.writeValueAsString(cmo);
+                jedis.set(cachekey, jsonString);
                 jedis.expire(cachekey,150);
                 System.out.println("cache succeeded");
             } catch (Exception ex) {
@@ -70,7 +78,7 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
             }
         }
         //logic to transmit to kafka goes here...
-        sendMessage(eventobject,"test-topic");
+        sendMessage(jsonString,"test-topic");
         return ResponseEntity.ok("Json data processed successfully");
     } catch (Exception e) {
         // Handle exceptions
