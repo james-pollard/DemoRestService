@@ -44,34 +44,24 @@ public ResponseEntity<String> processJsonFile(@RequestBody JsonData jsonData) {
 
         // Access the data from jsonData and perform any necessary processing
         String body = jsonData.getBody();
-        CachedModelObject cmo = new CachedModelObject();
-        cmo.setMessage(body);
+        //CachedModelObject cmo = new CachedModelObject();
+        //cmo.setMessage(body);
 
        // System.out.println("subject: "+subject);
         System.out.println("body: "+ body);
         String eventobject = body + ":" + timeStamp;
         if(this.jedisPool != null) {
             try  {
-                //let's see if we can cache the message:
+
                 Jedis jedis = jedisPool.getResource();
-                //list prior entries
-                if (keycounter > 0){
-                    System.out.println("Previous cached items:");
-                    for (Integer i = 0; i <  keycounter ; i++){
-                        String rkey = "key" + Integer.toString(i);
-                        String val = jedis.get(rkey);
-                        System.out.println(rkey + " " + val);
-                    }
-                }
-                String cachekey = "key" + Long.toString(keycounter);
-                cmo.setObjectNumber(keycounter);
-                cmo.setKey(cachekey);
-                cmo.setMessage(body);
+
+                CachedModelObject cmo = CachingServiceClass.getcmo(body,keycounter);
+
                 keycounter++;
                 ObjectMapper om = new ObjectMapper();
                 jsonString = om.writeValueAsString(cmo);
-                jedis.set(cachekey, jsonString);
-                jedis.expire(cachekey,150);
+                jedis.set(cmo.getKey(), jsonString);
+                jedis.expire(cmo.getKey(),150);
                 System.out.println("cache succeeded");
             } catch (Exception ex) {
                 System.out.println("cache attempt failed");

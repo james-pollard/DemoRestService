@@ -4,6 +4,16 @@ public class CachedModelObject {
     private String key;
     private String message;
 
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    private String timestamp;
+
     public String getKey() {
         return key;
     }
